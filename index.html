@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProductivityPro - Task Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #667eea;
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .stats-bar {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.5rem 0;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        main {
+            margin-top: 120px;
+            min-height: calc(100vh - 200px);
+            padding: 2rem 0;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 1.5rem 0;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+            text-align: center;
+        }
+
+        .task-form {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border: 2px solid #e9ecef;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #6c757d, #5a6268);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #218838);
+        }
+
+        .task-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .task-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .task-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .task-item.completed {
+            opacity: 0.7;
+            border-left-color: #28a745;
+        }
+
+        .task-item.overdue {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+        }
+
+        .task-item.due-today {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fff 0%, #fffbf0 100%);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .task-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            flex: 1;
+        }
+
+        .task-priority {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 1rem;
+        }
+
+        .priority-high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .priority-medium {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .priority-low {
+            background: #6c757d;
+            color: white;
+        }
+
+        .task-details {
+            color: #6c757d;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .task-actions button {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: #6c757d;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .calendar-view {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .calendar-header {
+            background: #667eea;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-nav {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .calendar-nav:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .reminder-item {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .reminder-item.urgent {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 50px 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 1rem;
+        }
+
+        .search-box::after {
+            content: 'Search';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .task-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .task-priority {
+                margin: 0.5rem 0 0 0;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                justify-content: center;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+
+        .empty-state img {
+            max-width: 200px;
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #e9ecef;
+            color: #495057;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-right: 0.5rem;
+        }
+
+        .task-category {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="stats-bar" id="statsBar">
+            Stats | Today: <span id="todayTasks">0</span> tasks | Overdue: <span id="overdueTasks">0</span> | Completed: <span id="completedTasks">0</span>
+        </div>
+        <div class="container">
+            <nav>
+                <div class="logo">ProductivityPro</div>
+                <ul class="nav-links">
+                    <li><a href="#" onclick="showPage('dashboard')" class="active">Dashboard</a></li>
+                    <li><a href="#" onclick="showPage('tasks')">Tasks</a></li>
+                    <li><a href="#" onclick="showPage('calendar')">Calendar</a></li>
+                    <li><a href="#" onclick="showPage('analytics')">Analytics</a></li>
+                    <li><a href="#" onclick="showPage('settings')">Settings</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- DASHBOARD PAGE -->
+        <div id="dashboard" class="page active">
+            <div class="hero">
+                <div class="container">
+                    <h1>Welcome Back!</h1>
+                    <p>Stay organized and boost your productivity</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="dailyProgress" style="width: 0%"></div>
+                    </div>
+                    <p>Daily Progress: <span id="progressText">0%</span></p>
+                </div>
+            </div>
+            
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalTasksCount">0</div>
+                        <div class="stat-label">Total Tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completedTasksCount">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="pendingTasksCount">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="todayTasksCount">0</div>
+                        <div class="stat-label">Due Today</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Urgent Reminders</h2>
+                    <div id="urgentReminders"></div>
+                </div>
+
+                <div class="section">
+                    <h2>Today's Tasks</h2>
+                    <div id="todayTasksList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TASKS PAGE -->
+        <div id="tasks" class="page">
+            <div class="container">
+                <div class="section">
+                    <h2>Create New Task</h2>
+                    <div class="task-form">
+                        <form id="taskForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="taskTitle">Task Title *</label>
+                                    <input type="text" id="taskTitle" required placeholder="Enter task title...">
+                                </div>
+                                <div class="form-group">
+                                    <label for="taskCategory">Category</label>
+                                    <select id="taskCategory">
+                                        <option value="work">Work</option>
+                                        <option value="personal">Personal</option>
+                                        <option value="health">Health</option>
+                                        <option value="learning">Learning</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="taskDescription">Description</label>
+                                <textarea id="taskDescription" rows="3" placeholder="Describe your task..."></textarea>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="taskDueDate">Due Date *</label>
+                                    <input type="date" id="taskDueDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="taskDueTime">Due Time</label>
+                                    <input type="time" id="taskDueTime">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="taskPriority">Priority</label>
+                                    <select id="taskPriority">
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="taskReminder">Reminder</label>
+                                    <select id="taskReminder">
+                                        <option value="none">No Reminder</option>
+                                        <option value="15">15 minutes before</option>
+                                        <option value="30">30 minutes before</option>
+                                        <option value="60">1 hour before</option>
+                                        <option value="1440">1 day before</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn">Create Task</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>All Tasks</h2>
+                    
+                    <div class="search-box">
+                        <input type="text" id="searchTasks" placeholder="Search tasks..." onkeyup="filterTasks()">
+                    </div>
+                    
+                    <div class="filters">
+                        <button class="filter-btn active" onclick="setFilter('all')">All Tasks</button>
+                        <button class="filter-btn" onclick="setFilter('pending')">Pending</button>
+                        <button class="filter-btn" onclick="setFilter('completed')">Completed</button>
+                        <button class="filter-btn" onclick="setFilter('overdue')">Overdue</button>
+                        <button class="filter-btn" onclick="setFilter('today')">Due Today</button>
+                        <button class="filter-btn" onclick="setFilter('high')">High Priority</button>
+                    </div>
+                    
+                    <div class="task-list" id="taskList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CALENDAR PAGE -->
+        <div id="calendar" class="page">
+            <div class="container">
+                <div class="section">
+                    <h2>Task Calendar</h2>
+                    <div class="calendar-view">
+                        <div class="calendar-header">
+                            <button class="calendar-nav" onclick="changeMonth(-1)">‹</button>
+                            <h3 id="currentMonth"></h3>
+                            <button class="calendar-nav" onclick="changeMonth(1)">›</button>
+                        </div>
+                        <div id="calendarGrid" style="padding: 1rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS PAGE -->
+        <div id="analytics" class="page">
+            <div class="container">
+                <div class="section">
+                    <h2>Productivity Analytics</h2>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="weeklyCompleted">0</div>
+                            <div class="stat-label">This Week</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="monthlyCompleted">0</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="averageDaily">0</div>
+                            <div class="stat-label">Daily Average</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="completionRate">0%</div>
+                            <div class="stat-label">Completion Rate</div>
+                        </div>
+                    </div>
+
+                    <div style="background: white; padding: 2rem; border-radius: 15px; margin-top: 2rem;">
+                        <h3>Task Categories Breakdown</h3>
+                        <div id="categoryBreakdown"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS PAGE -->
+        <div id="settings" class="page">
+            <div class="container">
+                <div class="section">
+                    <h2>Settings</h2>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="enableNotifications" checked>
+                            Enable Browser Notifications
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="enableSounds" checked>
+                            Enable Notification Sounds
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="defaultReminder">Default Reminder Time</label>
+                        <select id="defaultReminder">
+                            <option value="15">15 minutes before</option>
+                            <option value="30">30 minutes before</option>
+                            <option value="60">1 hour before</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button class="btn" onclick="exportTasks()">Export Tasks</button>
+                        <button class="btn btn-secondary" onclick="importTasks()">Import Tasks</button>
+                        <button class="btn btn-danger" onclick="clearAllTasks()">Clear All Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Global variables
+        let tasks = JSON.parse(localStorage.getItem('productivity_tasks') || '[]');
+        let currentFilter = 'all';
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            renderTasks();
+            updateCalendar();
+            checkReminders();
+            setInterval(checkReminders, 60000); // Check every minute
+            requestNotificationPermission();
+        });
+
+        // Task management functions
+        function addTask(taskData) {
+            const task = {
+                id: Date.now(),
+                title: taskData.title,
+                description: taskData.description,
+                category: taskData.category,
+                dueDate: taskData.dueDate,
+                dueTime: taskData.dueTime,
+                priority: taskData.priority,
+                reminder: taskData.reminder,
+                completed: false,
+                createdAt: new Date().toISOString(),
+                completedAt: null
+            };
+            
+            tasks.unshift(task);
+            saveTasks();
+            renderTasks();
+            updateStats();
+            showNotification('Task created successfully!', 'success');
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                task.completedAt = task.completed ? new Date().toISOString() : null;
+                saveTasks();
+                renderTasks();
+                updateStats();
+                showNotification(task.completed ? 'Task completed!' : 'Task marked as pending', 'success');
+            }
+        }
+
+        function deleteTask(id) {
+            if (confirm('Are you sure you want to delete this task?')) {
+                tasks = tasks.filter(t => t.id !== id);
+                saveTasks();
+                renderTasks();
+                updateStats();
+                showNotification('Task deleted', 'info');
+            }
+        }
+
+        function editTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                document.getElementById('taskTitle').value = task.title;
+                document.getElementById('taskDescription').value = task.description;
+                document.getElementById('taskCategory').value = task.category;
+                document.getElementById('taskDueDate').value = task.dueDate;
+                document.getElementById('taskDueTime').value = task.dueTime;
+                document.getElementById('taskPriority').value = task.priority;
+                document.getElementById('taskReminder').value = task.reminder;
+                
+                // Change form to edit mode
+                document.getElementById('taskForm').dataset.editId = id;
+                showPage('tasks');
+                document.getElementById('taskTitle').focus();
+            }
+        }
+
+        function saveTasks() {
+            localStorage.setItem('productivity_tasks', JSON.stringify(tasks));
+        }
+
+        function renderTasks() {
+            const taskList = document.getElementById('taskList');
+            const todayTasksList = document.getElementById('todayTasksList');
+            
+            let filteredTasks = filterTasksByCurrentFilter();
+            
+            // Render main task list
+            if (filteredTasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No tasks found</h3>
+                        <p>Create your first task to get started!</p>
+                    </div>
+                `;
+            } else {
+                taskList.innerHTML = filteredTasks.map(task => createTaskHTML(task)).join('');
+            }
+            
+            // Render today's tasks for dashboard
+            const today = new Date().toISOString().split('T')[0];
+            const todayTasks = tasks.filter(task => task.dueDate === today && !task.completed);
+            
+            if (todayTasksList) {
+                if (todayTasks.length === 0) {
+                    todayTasksList.innerHTML = '<p>No tasks due today! Great job!</p>';
+                } else {
+                    todayTasksList.innerHTML = todayTasks.slice(0, 5).map(task => createTaskHTML(task, true)).join('');
+                }
+            }
+        }
+
+        function createTaskHTML(task, compact = false) {
+            const dueDate = new Date(task.dueDate + 'T' + (task.dueTime || '23:59'));
+            const now = new Date();
+            const isOverdue = dueDate < now && !task.completed;
+            const isDueToday = task.dueDate === new Date().toISOString().split('T')[0];
+            
+            return `
+                <div class="task-item ${task.completed ? 'completed' : ''} ${isOverdue ? 'overdue' : ''} ${isDueToday ? 'due-today' : ''}">
+                    <div class="task-header">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</div>
+                    </div>
+                    
+                    <div class="task-category">${task.category.charAt(0).toUpperCase() + task.category.slice(1)}</div>
+                    
+                    ${task.description ? `<div class="task-details">${task.description}</div>` : ''}
+                    
+                    <div class="task-meta">
+                        <div>
+                            Due: ${formatDate(task.dueDate)} ${task.dueTime ? `at ${task.dueTime}` : ''}
+                            ${isOverdue ? ' <span style="color: #dc3545; font-weight: bold;">OVERDUE</span>' : ''}
+                            ${isDueToday ? ' <span style="color: #ffc107; font-weight: bold;">DUE TODAY</span>' : ''}
+                        </div>
+                        <div>Created: ${formatDate(task.createdAt.split('T')[0])}</div>
+                    </div>
+                    
+                    ${!compact ? `
+                    <div class="task-actions">
+                        <button class="btn btn-success" onclick="toggleTask(${task.id})">
+                            ${task.completed ? 'Undo' : 'Complete'}
+                        </button>
+                        <button class="btn btn-secondary" onclick="editTask(${task.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteTask(${task.id})">Delete</button>
+                    </div>
+                    ` : `
+                    <div class="task-actions">
+                        <button class="btn btn-success" onclick="toggleTask(${task.id})">
+                            ${task.completed ? 'Undo' : 'Complete'}
+                        </button>
+                    </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function filterTasksByCurrentFilter() {
+            let filtered = [...tasks];
+            
+            // Apply search filter
+            const searchTerm = document.getElementById('searchTasks')?.value.toLowerCase() || '';
+            if (searchTerm) {
+                filtered = filtered.filter(task => 
+                    task.title.toLowerCase().includes(searchTerm) ||
+                    task.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply category filter
+            switch (currentFilter) {
+                case 'pending':
+                    filtered = filtered.filter(task => !task.completed);
+                    break;
+                case 'completed':
+                    filtered = filtered.filter(task => task.completed);
+                    break;
+                case 'overdue':
+                    const now = new Date();
+                    filtered = filtered.filter(task => {
+                        const dueDate = new Date(task.dueDate + 'T' + (task.dueTime || '23:59'));
+                        return dueDate < now && !task.completed;
+                    });
+                    break;
+                case 'today':
+                    const today = new Date().toISOString().split('T')[0];
+                    filtered = filtered.filter(task => task.dueDate === today);
+                    break;
+                case 'high':
+                    filtered = filtered.filter(task => task.priority === 'high');
+                    break;
+            }
+            
+            return filtered.sort((a, b) => {
+                // Sort by completed status first
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+                // Then by priority
+                const priorityOrder = { high: 3, medium: 2, low: 1 };
+                if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                    return priorityOrder[b.priority] - priorityOrder[a.priority];
+                }
+                // Finally by due date
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            });
+        }
+
+        function updateStats() {
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(task => task.completed).length;
+            const pendingTasks = totalTasks - completedTasks;
+            const today = new Date().toISOString().split('T')[0];
+            const todayTasks = tasks.filter(task => task.dueDate === today).length;
+            const overdueTasks = tasks.filter(task => {
+                const dueDate = new Date(task.dueDate + 'T' + (task.dueTime || '23:59'));
+                return dueDate < new Date() && !task.completed;
+            }).length;
+            
+            // Update dashboard stats
+            document.getElementById('totalTasksCount').textContent = totalTasks;
+            document.getElementById('completedTasksCount').textContent = completedTasks;
+            document.getElementById('pendingTasksCount').textContent = pendingTasks;
+            document.getElementById('todayTasksCount').textContent = todayTasks;
+            
+            // Update stats bar
+            document.getElementById('todayTasks').textContent = todayTasks;
+            document.getElementById('overdueTasks').textContent = overdueTasks;
+            document.getElementById('completedTasks').textContent = completedTasks;
+            
+            // Update daily progress
+            const todayCompletedTasks = tasks.filter(task => 
+                task.dueDate === today && task.completed
+            ).length;
+            const progressPercentage = todayTasks > 0 ? Math.round((todayCompletedTasks / todayTasks) * 100) : 0;
+            
+            const progressBar = document.getElementById('dailyProgress');
+            const progressText = document.getElementById('progressText');
+            if (progressBar) {
+                progressBar.style.width = progressPercentage + '%';
+            }
+            if (progressText) {
+                progressText.textContent = progressPercentage + '%';
+            }
+            
+            updateAnalytics();
+            updateUrgentReminders();
+        }
+
+        function updateAnalytics() {
+            const now = new Date();
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
+            
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            const weeklyCompleted = tasks.filter(task => {
+                if (!task.completed || !task.completedAt) return false;
+                const completedDate = new Date(task.completedAt);
+                return completedDate >= weekStart;
+            }).length;
+            
+            const monthlyCompleted = tasks.filter(task => {
+                if (!task.completed || !task.completedAt) return false;
+                const completedDate = new Date(task.completedAt);
+                return completedDate >= monthStart;
+            }).length;
+            
+            const totalCompleted = tasks.filter(task => task.completed).length;
+            const totalTasks = tasks.length;
+            const completionRate = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+            const averageDaily = Math.round(monthlyCompleted / new Date().getDate());
+            
+            // Update analytics display
+            const weeklyElement = document.getElementById('weeklyCompleted');
+            const monthlyElement = document.getElementById('monthlyCompleted');
+            const averageElement = document.getElementById('averageDaily');
+            const completionElement = document.getElementById('completionRate');
+            
+            if (weeklyElement) weeklyElement.textContent = weeklyCompleted;
+            if (monthlyElement) monthlyElement.textContent = monthlyCompleted;
+            if (averageElement) averageElement.textContent = averageDaily;
+            if (completionElement) completionElement.textContent = completionRate + '%';
+            
+            updateCategoryBreakdown();
+        }
+
+        function updateCategoryBreakdown() {
+            const categoryBreakdown = document.getElementById('categoryBreakdown');
+            if (!categoryBreakdown) return;
+            
+            const categories = {};
+            tasks.forEach(task => {
+                categories[task.category] = (categories[task.category] || 0) + 1;
+            });
+            
+            const total = tasks.length;
+            let html = '';
+            
+            Object.entries(categories).forEach(([category, count]) => {
+                const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                html += `
+                    <div style="margin: 1rem 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                            <span>${count} tasks (${percentage}%)</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            categoryBreakdown.innerHTML = html || '<p>No tasks created yet.</p>';
+        }
+
+        function updateUrgentReminders() {
+            const urgentReminders = document.getElementById('urgentReminders');
+            if (!urgentReminders) return;
+            
+            const now = new Date();
+            const urgent = tasks.filter(task => {
+                if (task.completed) return false;
+                const dueDate = new Date(task.dueDate + 'T' + (task.dueTime || '23:59'));
+                const timeDiff = dueDate - now;
+                const hoursDiff = timeDiff / (1000 * 60 * 60);
+                return hoursDiff <= 24 && hoursDiff >= 0; // Due within 24 hours
+            });
+            
+            if (urgent.length === 0) {
+                urgentReminders.innerHTML = '<p>No urgent tasks! You\'re doing great!</p>';
+            } else {
+                urgentReminders.innerHTML = urgent.map(task => `
+                    <div class="reminder-item ${task.priority === 'high' ? 'urgent' : ''}">
+                        <strong>${task.title}</strong>
+                        <div>Due: ${formatDate(task.dueDate)} ${task.dueTime ? 'at ' + task.dueTime : ''}</div>
+                        <div class="task-priority priority-${task.priority}">${task.priority.toUpperCase()} PRIORITY</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function checkReminders() {
+            const now = new Date();
+            
+            tasks.forEach(task => {
+                if (task.completed || !task.reminder || task.reminder === 'none') return;
+                
+                const dueDate = new Date(task.dueDate + 'T' + (task.dueTime || '23:59'));
+                const reminderTime = new Date(dueDate.getTime() - (parseInt(task.reminder) * 60000));
+                
+                // Check if we should show reminder (within 1 minute window)
+                const timeDiff = Math.abs(now - reminderTime);
+                if (timeDiff <= 60000 && !task.reminderShown) {
+                    showNotification(`Reminder: ${task.title}`, 'warning');
+                    task.reminderShown = true;
+                    saveTasks();
+                }
+            });
+        }
+
+        function updateCalendar() {
+            const currentMonthElement = document.getElementById('currentMonth');
+            const calendarGrid = document.getElementById('calendarGrid');
+            
+            if (!currentMonthElement || !calendarGrid) return;
+            
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            currentMonthElement.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDay = firstDay.getDay();
+            
+            let calendarHTML = '<div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e9ecef;">';
+            
+            // Day headers
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                calendarHTML += `<div style="background: #f8f9fa; padding: 0.5rem; text-align: center; font-weight: bold;">${day}</div>`;
+            });
+            
+            // Empty cells for days before month starts
+            for (let i = 0; i < startDay; i++) {
+                calendarHTML += '<div style="background: white; padding: 1rem; min-height: 60px;"></div>';
+            }
+            
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayTasks = tasks.filter(task => task.dueDate === dateStr);
+                const isToday = dateStr === new Date().toISOString().split('T')[0];
+                
+                calendarHTML += `
+                    <div style="background: white; padding: 0.5rem; min-height: 60px; border: ${isToday ? '2px solid #667eea' : 'none'};">
+                        <div style="font-weight: bold; margin-bottom: 0.25rem;">${day}</div>
+                        ${dayTasks.slice(0, 2).map(task => `
+                            <div style="font-size: 0.7rem; background: #e3f2fd; padding: 0.1rem 0.25rem; margin: 0.1rem 0; border-radius: 3px; ${task.completed ? 'text-decoration: line-through; opacity: 0.6;' : ''}">
+                                ${task.title.substring(0, 15)}${task.title.length > 15 ? '...' : ''}
+                            </div>
+                        `).join('')}
+                        ${dayTasks.length > 2 ? `<div style="font-size: 0.6rem; color: #666;">+${dayTasks.length - 2} more</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            calendarHTML += '</div>';
+            calendarGrid.innerHTML = calendarHTML;
+        }
+
+        // Event handlers
+        document.getElementById('taskForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('taskTitle').value,
+                description: document.getElementById('taskDescription').value,
+                category: document.getElementById('taskCategory').value,
+                dueDate: document.getElementById('taskDueDate').value,
+                dueTime: document.getElementById('taskDueTime').value,
+                priority: document.getElementById('taskPriority').value,
+                reminder: document.getElementById('taskReminder').value
+            };
+            
+            const editId = this.dataset.editId;
+            if (editId) {
+                // Update existing task
+                const task = tasks.find(t => t.id === parseInt(editId));
+                if (task) {
+                    Object.assign(task, formData);
+                    saveTasks();
+                    renderTasks();
+                    updateStats();
+                    showNotification('Task updated successfully!', 'success');
+                }
+                delete this.dataset.editId;
+            } else {
+                // Create new task
+                addTask(formData);
+            }
+            
+            this.reset();
+            // Set due date to today by default
+            document.getElementById('taskDueDate').value = new Date().toISOString().split('T')[0];
+        });
+
+        function showPage(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update navigation
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update content based on page
+            if (pageId === 'calendar') {
+                updateCalendar();
+            } else if (pageId === 'analytics') {
+                updateAnalytics();
+            }
+            
+            window.scrollTo(0, 0);
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            renderTasks();
+        }
+
+        function filterTasks() {
+            renderTasks();
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            updateCalendar();
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification show ${type}`;
+            
+            // Show browser notification if enabled
+            if (document.getElementById('enableNotifications')?.checked && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification('ProductivityPro', {
+                    body: message,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23667eea"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                });
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        showNotification('Notifications enabled successfully!', 'success');
+                    }
+                });
+            }
+        }
+
+        function exportTasks() {
+            const dataStr = JSON.stringify(tasks, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `tasks_backup_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            showNotification('Tasks exported successfully!', 'success');
+        }
+
+        function importTasks() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const importedTasks = JSON.parse(e.target.result);
+                            if (confirm(`Import ${importedTasks.length} tasks? This will replace your current tasks.`)) {
+                                tasks = importedTasks;
+                                saveTasks();
+                                renderTasks();
+                                updateStats();
+                                showNotification('Tasks imported successfully!', 'success');
+                            }
+                        } catch (error) {
+                            showNotification('Error importing tasks. Invalid file format.', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function clearAllTasks() {
+            if (confirm('Are you sure you want to delete ALL tasks? This action cannot be undone.')) {
+                if (confirm('This will permanently delete all your tasks. Are you absolutely sure?')) {
+                    tasks = [];
+                    saveTasks();
+                    renderTasks();
+                    updateStats();
+                    showNotification('All tasks cleared', 'info');
+                }
+            }
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        // Quick actions for demo purposes
+        function addSampleTasks() {
+            const sampleTasks = [
+                {
+                    title: 'Complete project proposal',
+                    description: 'Finish the quarterly project proposal and send to team',
+                    category: 'work',
+                    dueDate: new Date().toISOString().split('T')[0],
+                    dueTime: '17:00',
+                    priority: 'high',
+                    reminder: '60'
+                },
+                {
+                    title: 'Gym workout',
+                    description: 'Cardio and strength training session',
+                    category: 'health',
+                    dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                    dueTime: '07:00',
+                    priority: 'medium',
+                    reminder: '30'
+                },
+                {
+                    title: 'Read productivity book',
+                    description: 'Continue reading "Atomic Habits" chapter 5-7',
+                    category: 'learning',
+                    dueDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+                    dueTime: '',
+                    priority: 'low',
+                    reminder: 'none'
+                }
+            ];
+            
+            sampleTasks.forEach(taskData => addTask(taskData));
+        }
+
+        // Initialize default due date to today
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('taskDueDate').value = today;
+            
+            // Add sample data button if no tasks exist
+            if (tasks.length === 0) {
+                setTimeout(() => {
+                    if (confirm('Would you like to add some sample tasks to get started?')) {
+                        addSampleTasks();
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
