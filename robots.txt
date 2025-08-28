@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://renashoby.github.io/DiM/sitemap.xml
